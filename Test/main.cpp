@@ -61,6 +61,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             // Do Xframework stuff here
             xfw.BeginScene(0.25f, 0.5f, 0.0f);
 
+            xfw.DrawTriangle(
+                DirectX::XMFLOAT3(-0.4f, 0.5f, 0.5f),
+                DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
+                DirectX::XMFLOAT3(-0.8f, -0.5f, 0.5f),
+                DirectX::XMFLOAT4()
+            );
+
+            xfw.DrawTriangle(
+                DirectX::XMFLOAT3(0.4f, 0.5f, 0.5f),
+                DirectX::XMFLOAT3(0.8f, -0.5f, 0.5f),
+                DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
+                DirectX::XMFLOAT4()
+            );
+
             xfw.EndScene();
         }
     }

@@ -18,6 +18,12 @@
     <ClInclude Include="xframework.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="xfwVertex.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="xfwShaderCode.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="xframework.cpp">

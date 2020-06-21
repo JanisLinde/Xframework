@@ -1,10 +1,8 @@
 #pragma once
 
-#include <d3d11.h>
+#include "xfwVertex.h"
 
-#include <DirectXMath.h>
-
-#define SAVERELEASE(x) if(x) { x->Release(); x = nullptr; }
+#define SAFERELEASE(x) if(x) { x->Release(); x = nullptr; }
 
 class __declspec(dllexport) xframework
 {
@@ -32,9 +30,20 @@ public:
 		DirectX::XMFLOAT4 color);
 
 private:
+	void OutputShaderError(ID3DBlob* errorMsg);
+
+private:
 	IDXGISwapChain* m_swapChain = nullptr;
 	ID3D11Device* m_d3d11Device = nullptr;
 	ID3D11DeviceContext* m_d3d11DeviceContext = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
+
+	// Shader
+	ID3D11VertexShader* m_vertexShader = nullptr;
+	ID3D11PixelShader* m_pixelShader = nullptr;
+	ID3D11InputLayout* m_inputLayout = nullptr;
+
+	// Geometry
+	// ID3D11Buffer* m_vertexBuffer = nullptr;
 
 };
