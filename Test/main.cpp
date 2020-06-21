@@ -65,14 +65,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 DirectX::XMFLOAT3(-0.4f, 0.5f, 0.5f),
                 DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
                 DirectX::XMFLOAT3(-0.8f, -0.5f, 0.5f),
-                DirectX::XMFLOAT4()
+                DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)
             );
-
+            
             xfw.DrawTriangle(
                 DirectX::XMFLOAT3(0.4f, 0.5f, 0.5f),
                 DirectX::XMFLOAT3(0.8f, -0.5f, 0.5f),
                 DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
-                DirectX::XMFLOAT4()
+                DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)
             );
 
             xfw.EndScene();

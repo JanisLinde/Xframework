@@ -98,6 +98,10 @@ void xframework::Shutdown()
 	SAFERELEASE(m_d3d11Device)
 	SAFERELEASE(m_d3d11DeviceContext)
 	SAFERELEASE(m_renderTargetView)
+
+	SAFERELEASE(m_inputLayout)
+	SAFERELEASE(m_vertexShader)
+	SAFERELEASE(m_pixelShader)
 }
 
 void xframework::BeginScene(float r, float g, float b)
@@ -115,6 +119,15 @@ void xframework::SetCameraLocation(float x, float y, float z)
 {
 }
 
+void xframework::DrawTriangle(float ax, float ay, float az, float bx, float by, float bz,
+	float cx, float cy, float cz, float r, float g, float b)
+{
+	DrawTriangle(DirectX::XMFLOAT3(ax, ay, az),
+		DirectX::XMFLOAT3(bx, by, bz),
+		DirectX::XMFLOAT3(cx, cy, cz),
+		DirectX::XMFLOAT4(r, g, b, 1.0f));
+}
+
 void xframework::DrawTriangle(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX::XMFLOAT3 c, DirectX::XMFLOAT4 color)
 {
 	HRESULT hr;
@@ -122,9 +135,9 @@ void xframework::DrawTriangle(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX:
 
 	xfwVertex v[] =
 	{
-		xfwVertex(a.x, a.y, a.z),
-		xfwVertex(b.x, b.y, b.z),
-		xfwVertex(c.x, c.y, c.z)
+		xfwVertex(a.x, a.y, a.z, color.x, color.y, color.z, color.w),
+		xfwVertex(b.x, b.y, b.z, color.x, color.y, color.z, color.w),
+		xfwVertex(c.x, c.y, c.z, color.x, color.y, color.z, color.w)
 	};
 
 	D3D11_BUFFER_DESC vertexBufferDesc;

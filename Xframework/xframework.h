@@ -19,6 +19,13 @@ public:
 	void SetCameraLocation(float x, float y, float z);
 
 	void DrawTriangle(
+		float ax, float ay, float az,
+		float bx, float by, float bz,
+		float cx, float cy, float cz,
+		float r, float g, float b
+	);
+
+	void DrawTriangle(
 		DirectX::XMFLOAT3 a,
 		DirectX::XMFLOAT3 b,
 		DirectX::XMFLOAT3 c,
@@ -42,8 +49,5 @@ private:
 	ID3D11VertexShader* m_vertexShader = nullptr;
 	ID3D11PixelShader* m_pixelShader = nullptr;
 	ID3D11InputLayout* m_inputLayout = nullptr;
-
-	// Geometry
-	// ID3D11Buffer* m_vertexBuffer = nullptr;
 
 };
