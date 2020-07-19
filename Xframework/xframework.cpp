@@ -7,6 +7,12 @@
 
 xframework::xframework()
 {
+	// Camera
+	m_cameraPosition = DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f);
+	m_cameraTarget = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	m_cameraUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	m_cameraView = DirectX::XMMatrixLookAtLH(m_cameraPosition, m_cameraTarget, m_cameraUp);
 }
 
 xframework::~xframework()
@@ -15,6 +21,9 @@ xframework::~xframework()
 
 bool xframework::Initialize(HWND hwnd, int width, int height)
 {
+	m_width = width;
+	m_height = height;
+
 	HRESULT hr;
 	DXGI_MODE_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(DXGI_MODE_DESC));
@@ -49,7 +58,21 @@ bool xframework::Initialize(HWND hwnd, int width, int height)
 	hr = m_d3d11Device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
 	backBuffer->Release();
 
-	m_d3d11DeviceContext->OMSetRenderTargets(1, &m_renderTargetView, NULL);
+	// Depth stencil 
+	D3D11_TEXTURE2D_DESC depthStencilDesc;
+	depthStencilDesc.Width = width;
+	depthStencilDesc.Height = height;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0;
+	depthStencilDesc.MiscFlags = 0;
+	m_d3d11Device->CreateTexture2D(&depthStencilDesc, NULL, &m_depthStencilBuffer);
+	m_d3d11Device->CreateDepthStencilView(m_depthStencilBuffer, NULL, &m_depthStencilView);
 
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
@@ -57,7 +80,22 @@ bool xframework::Initialize(HWND hwnd, int width, int height)
 	viewport.TopLeftY = 0;
 	viewport.Width = width;
 	viewport.Height = height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
 	m_d3d11DeviceContext->RSSetViewports(1, &viewport);
+	m_d3d11DeviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+	// Initialize constant buffer (per object)
+	D3D11_BUFFER_DESC cbbd;
+	ZeroMemory(&cbbd, sizeof(D3D11_BUFFER_DESC));
+	cbbd.Usage = D3D11_USAGE_DEFAULT;
+	cbbd.ByteWidth = sizeof(cbPerObj);
+	cbbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbbd.CPUAccessFlags = 0;
+	cbbd.MiscFlags = 0;
+
+	hr = m_d3d11Device->CreateBuffer(&cbbd, NULL, &m_perObjBuffer);
 
 	// Initialize shader
 	ID3DBlob* vsBuffer;
@@ -98,6 +136,9 @@ void xframework::Shutdown()
 	SAFERELEASE(m_d3d11Device)
 	SAFERELEASE(m_d3d11DeviceContext)
 	SAFERELEASE(m_renderTargetView)
+	SAFERELEASE(m_depthStencilBuffer)
+	SAFERELEASE(m_depthStencilView)
+	SAFERELEASE(m_perObjBuffer)
 
 	SAFERELEASE(m_inputLayout)
 	SAFERELEASE(m_vertexShader)
@@ -108,6 +149,16 @@ void xframework::BeginScene(float r, float g, float b)
 {
 	float bgColor[4] = { r, g, b, 1.0f };
 	m_d3d11DeviceContext->ClearRenderTargetView(m_renderTargetView, bgColor);
+	m_d3d11DeviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0);
+
+	// Update camera
+	DirectX::XMMATRIX camProjection = DirectX::XMMatrixPerspectiveFovLH(0.4f * 3.14f, (float)m_width / m_height, 1.0f, 1000.0f);
+	m_world = DirectX::XMMatrixIdentity();
+	m_wvp = m_world * m_cameraView * camProjection;
+
+	cbPerObj.WVP = DirectX::XMMatrixTranspose(m_wvp);
+	m_d3d11DeviceContext->UpdateSubresource(m_perObjBuffer, 0, NULL, &cbPerObj, 0, 0);
+	m_d3d11DeviceContext->VSSetConstantBuffers(0, 1, &m_perObjBuffer);
 }
 
 void xframework::EndScene()
@@ -119,25 +170,116 @@ void xframework::SetCameraLocation(float x, float y, float z)
 {
 }
 
-void xframework::DrawTriangle(float ax, float ay, float az, float bx, float by, float bz,
-	float cx, float cy, float cz, float r, float g, float b)
+void xframework::DrawPoint(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT4 color)
 {
-	DrawTriangle(DirectX::XMFLOAT3(ax, ay, az),
-		DirectX::XMFLOAT3(bx, by, bz),
-		DirectX::XMFLOAT3(cx, cy, cz),
-		DirectX::XMFLOAT4(r, g, b, 1.0f));
+	DrawPoint(pos.x, pos.y, pos.z, color.x, color.y, color.z);
 }
 
-void xframework::DrawTriangle(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX::XMFLOAT3 c, DirectX::XMFLOAT4 color)
+void xframework::DrawPoint(float x, float y, float z, float r, float g, float b)
 {
 	HRESULT hr;
 	ID3D11Buffer* vertexBuffer = nullptr;
 
 	xfwVertex v[] =
 	{
-		xfwVertex(a.x, a.y, a.z, color.x, color.y, color.z, color.w),
-		xfwVertex(b.x, b.y, b.z, color.x, color.y, color.z, color.w),
-		xfwVertex(c.x, c.y, c.z, color.x, color.y, color.z, color.w)
+		xfwVertex(x, y, z, r, g, b, 1.0f)
+	};
+
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(xfwVertex) * 1;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA vertexBufferData;
+	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vertexBufferData.pSysMem = v;
+	hr = m_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &vertexBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Buffer", L"Error", MB_OK);
+		return;
+	}
+
+	UINT stride = sizeof(xfwVertex);
+	UINT offset = 0;
+	m_d3d11DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	m_d3d11DeviceContext->IASetInputLayout(m_inputLayout);
+	m_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	m_d3d11DeviceContext->VSSetShader(m_vertexShader, 0, 0);
+	m_d3d11DeviceContext->PSSetShader(m_pixelShader, 0, 0);
+	m_d3d11DeviceContext->Draw(1, 0);
+
+
+	SAFERELEASE(vertexBuffer);
+}
+
+void xframework::DrawLine(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX::XMFLOAT4 color)
+{
+
+}
+
+void xframework::DrawLine(float ax, float ay, float az, float bx, float by, float bz,
+	float r, float g, float b)
+{
+	HRESULT hr;
+	ID3D11Buffer* vertexBuffer = nullptr;
+
+	xfwVertex v[] =
+	{
+		xfwVertex(ax, ay, az, r, g, b, 1.0f),
+		xfwVertex(bx, by, bz, r, g, b, 1.0f)
+	};
+
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(xfwVertex) * 2;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA vertexBufferData;
+	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vertexBufferData.pSysMem = v;
+	hr = m_d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &vertexBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Buffer", L"Error", MB_OK);
+		return;
+	}
+
+	UINT stride = sizeof(xfwVertex);
+	UINT offset = 0;
+	m_d3d11DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	m_d3d11DeviceContext->IASetInputLayout(m_inputLayout);
+	m_d3d11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	m_d3d11DeviceContext->VSSetShader(m_vertexShader, 0, 0);
+	m_d3d11DeviceContext->PSSetShader(m_pixelShader, 0, 0);
+	m_d3d11DeviceContext->Draw(2, 0);
+
+
+	SAFERELEASE(vertexBuffer);
+}
+
+void xframework::DrawTriangle(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX::XMFLOAT3 c, DirectX::XMFLOAT4 color)
+{
+	DrawTriangle(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, color.x, color.y, color.z);
+}
+
+void xframework::DrawTriangle(float ax, float ay, float az, float bx, float by, float bz,
+	float cx, float cy, float cz, float r, float g, float b)
+{
+	HRESULT hr;
+	ID3D11Buffer* vertexBuffer = nullptr;
+
+	xfwVertex v[] =
+	{
+		xfwVertex(ax, ay, az, r, g, b, 1.0f),
+		xfwVertex(bx, by, bz, r, g, b, 1.0f),
+		xfwVertex(cx, cy, cz, r, g, b, 1.0f)
 	};
 
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -169,10 +311,6 @@ void xframework::DrawTriangle(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b, DirectX:
 
 
 	SAFERELEASE(vertexBuffer);
-}
-
-void xframework::DrawSphere(DirectX::XMFLOAT3 m, float r, DirectX::XMFLOAT4 color)
-{
 }
 
 void xframework::OutputShaderError(ID3DBlob* errorMsg)

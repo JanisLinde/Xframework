@@ -2,7 +2,7 @@
 
 #include <xframework.h>
 
-LPCTSTR WndClassName = L"firstwindow";
+LPCTSTR WndClassName = L"xfwTest";
 
 const int width = 800; 
 const int height = 600;
@@ -43,7 +43,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ZeroMemory(&msg, sizeof(MSG));
 
     xframework xfw;
-    xfw.Initialize(hwnd, width, height);
+    if (!xfw.Initialize(hwnd, width, height))
+        return -3;
 
     while (true)
     {
@@ -59,13 +60,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         else
         {
             // Do Xframework stuff here
-            xfw.BeginScene(0.25f, 0.5f, 0.0f);
+            xfw.BeginScene(0.8f, 0.8f, 0.8f);
 
             xfw.DrawTriangle(
                 DirectX::XMFLOAT3(-0.4f, 0.5f, 0.5f),
                 DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
                 DirectX::XMFLOAT3(-0.8f, -0.5f, 0.5f),
-                DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)
+                DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0)
             );
             
             xfw.DrawTriangle(
@@ -74,6 +75,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 DirectX::XMFLOAT3(0.0f, -0.5f, 0.5f),
                 DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)
             );
+
+            // xfw.DrawPoint(0.0f, 0.9f, 0.0f, 1.0f, 0.0f, 1.0f);
+            // xfw.DrawLine(1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f);
 
             xfw.EndScene();
         }

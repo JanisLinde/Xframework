@@ -2,6 +2,10 @@
 
 const char* shaderCode = 
 R"(
+	cbuffer cbPerObject
+	{
+		float4x4 WVP;
+	};
 
 	struct VS_OUTPUT
 	{
@@ -14,7 +18,7 @@ R"(
 	{
 		VS_OUTPUT output;
 
-		output.Pos = inPos;
+		output.Pos = mul(inPos, WVP);
 		output.Color = inColor;
 
 		return output;
