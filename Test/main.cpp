@@ -43,7 +43,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ZeroMemory(&msg, sizeof(MSG));
 
     xframework xfw;
-    if (!xfw.Initialize(hwnd, width, height))
+    if (!xfw.Initialize(hInstance, hwnd, width, height))
         return -3;
 
     while (true)
@@ -56,9 +56,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
         else
         {
+            xfw.Update();
+
+            if (xfw.InputIsKeyPressed(DIK_RETURN))
+                break;
+
             // Do Xframework stuff here
             xfw.BeginScene(0.8f, 0.8f, 0.8f);
 

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "xfwVertex.h"
+#include <memory>
 
-#define SAFERELEASE(x) if(x) { x->Release(); x = nullptr; }
+#include "xfwVertex.h"
+#include "xfwInput.h"
 
 // Constant-Buffers
 struct cbPerObj
@@ -17,9 +18,12 @@ public:
 	xframework();
 	~xframework();
 
-	bool Initialize(HWND hwnd, int width, int height);
+	bool Initialize(HINSTANCE hInstance, HWND hwnd, int width, int height);
 	void Shutdown();
 
+	void Update();
+
+	// Drawing
 	void BeginScene(float r, float g, float b);
 	void EndScene();
 
@@ -60,6 +64,9 @@ public:
 		float r, float g, float b
 	);
 
+	// Input
+	bool InputIsKeyPressed(unsigned int key);
+
 private:
 	void OutputShaderError(ID3DBlob* errorMsg);
 
@@ -91,4 +98,6 @@ private:
 	DirectX::XMVECTOR m_cameraTarget;
 	DirectX::XMVECTOR m_cameraUp;
 
+	// Input
+	std::unique_ptr<xfwInput> m_input = nullptr;
 };

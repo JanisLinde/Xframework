@@ -5,10 +5,12 @@
 #include <d3dcompiler.h>
 #include "xfwShaderCode.h"
 
+#include "xfwUtilities.h"
+
 xframework::xframework()
 {
 	// Camera
-	m_cameraPosition = DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f);
+	m_cameraPosition = DirectX::XMVectorSet(0.0f, 0.0f, -2.0f, 0.0f);
 	m_cameraTarget = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	m_cameraUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -19,7 +21,7 @@ xframework::~xframework()
 {
 }
 
-bool xframework::Initialize(HWND hwnd, int width, int height)
+bool xframework::Initialize(HINSTANCE hInstance, HWND hwnd, int width, int height)
 {
 	m_width = width;
 	m_height = height;
@@ -127,6 +129,11 @@ bool xframework::Initialize(HWND hwnd, int width, int height)
 	SAFERELEASE(psBuffer);
 	SAFERELEASE(errorMsg);
 
+	// Input
+	m_input = std::make_unique<xfwInput>();
+	if (m_input->Initialize(hInstance, hwnd, width, height))
+		return false;
+
 	return true;
 }
 
@@ -143,6 +150,11 @@ void xframework::Shutdown()
 	SAFERELEASE(m_inputLayout)
 	SAFERELEASE(m_vertexShader)
 	SAFERELEASE(m_pixelShader)
+}
+
+void xframework::Update()
+{
+	m_input->Update();
 }
 
 void xframework::BeginScene(float r, float g, float b)
@@ -168,6 +180,7 @@ void xframework::EndScene()
 
 void xframework::SetCameraLocation(float x, float y, float z)
 {
+	m_cameraPosition = DirectX::XMVectorSet(x, y, z, 0.0f);
 }
 
 void xframework::DrawPoint(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT4 color)
@@ -311,6 +324,14 @@ void xframework::DrawTriangle(float ax, float ay, float az, float bx, float by, 
 
 
 	SAFERELEASE(vertexBuffer);
+}
+
+bool xframework::InputIsKeyPressed(unsigned int key)
+{
+	if (m_input)
+		return m_input->IsKeyPressed(key);
+	else
+		return false;
 }
 
 void xframework::OutputShaderError(ID3DBlob* errorMsg)

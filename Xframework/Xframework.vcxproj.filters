@@ -24,9 +24,18 @@
     <ClInclude Include="xfwShaderCode.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="xfwInput.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="xfwUtilities.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="xframework.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="xfwInput.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
