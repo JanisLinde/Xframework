@@ -46,6 +46,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!xfw.Initialize(hInstance, hwnd, width, height))
         return -3;
 
+    ShowCursor(false);
+
     while (true)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -60,7 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             xfw.Update();
 
-            if (xfw.InputIsKeyPressed(DIK_RETURN))
+            if (xfw.InputIsKeyPressed(DIK_ESCAPE))
                 break;
 
             // Do Xframework stuff here
@@ -88,6 +90,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     xfw.Shutdown();
+    ShowCursor(true);
 
     return (int)msg.wParam;
 }
@@ -96,17 +99,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
-
-    case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE) {
-            if (MessageBox(0, 
-                L"Are you sure you want to exit?",
-                L"Really?", 
-                MB_YESNO | MB_ICONQUESTION) == IDYES)
-                DestroyWindow(hwnd);
-        }
-        return 0;
-
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;

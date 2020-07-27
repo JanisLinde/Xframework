@@ -155,6 +155,49 @@ void xframework::Shutdown()
 void xframework::Update()
 {
 	m_input->Update();
+
+	float speed = 0.0025f;
+
+	if (m_input->IsKeyPressed(DIK_A))
+	{
+		m_cameraMoveLeftRight -= speed;
+	}
+	if (m_input->IsKeyPressed(DIK_D))
+	{
+		m_cameraMoveLeftRight += speed;
+	}
+	if (m_input->IsKeyPressed(DIK_W))
+	{
+		m_cameraMoveBackForward += speed;
+	}
+	if (m_input->IsKeyPressed(DIK_S))
+	{
+		m_cameraMoveBackForward -= speed;
+	}
+
+	int x, y;
+	m_input->GetMouseMove(x, y);
+	m_cameraYaw += x * 0.001f;
+	m_cameraPitch += y * 0.001f;
+
+	// Update camera
+	m_cameraRotation = XMMatrixRotationRollPitchYaw(m_cameraPitch, m_cameraYaw, 0.0f);
+	m_cameraTarget = XMVector3TransformCoord(m_cameraDefaultForward, m_cameraRotation);
+	m_cameraTarget = XMVector3Normalize(m_cameraTarget);
+
+	m_cameraRight = XMVector3TransformCoord(m_cameraDefaultRight, m_cameraRotation);
+	m_cameraForward = XMVector3TransformCoord(m_cameraDefaultForward, m_cameraRotation);
+	m_cameraUp = XMVector3Cross(m_cameraForward, m_cameraRight);
+
+	m_cameraPosition += m_cameraMoveLeftRight * m_cameraRight;
+	m_cameraPosition += m_cameraMoveBackForward * m_cameraForward;
+
+	m_cameraMoveLeftRight = 0.0f;
+	m_cameraMoveBackForward = 0.0f;
+
+	m_cameraTarget = m_cameraPosition + m_cameraTarget;
+
+	m_cameraView = XMMatrixLookAtLH(m_cameraPosition, m_cameraTarget, m_cameraUp);
 }
 
 void xframework::BeginScene(float r, float g, float b)

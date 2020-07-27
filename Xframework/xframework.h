@@ -5,8 +5,10 @@
 #include "xfwVertex.h"
 #include "xfwInput.h"
 
+using namespace DirectX;
+
 // Constant-Buffers
-struct cbPerObj
+struct xfwCbPerObj
 {
 	DirectX::XMMATRIX WVP;
 };
@@ -87,16 +89,31 @@ private:
 
 	// Constant buffer per object
 	ID3D11Buffer* m_perObjBuffer = nullptr;
-	cbPerObj cbPerObj;
+	xfwCbPerObj cbPerObj;
 
 	DirectX::XMMATRIX m_wvp;
 	DirectX::XMMATRIX m_world;
 
 	// Camera
 	DirectX::XMMATRIX m_cameraView;
+
 	DirectX::XMVECTOR m_cameraPosition;
 	DirectX::XMVECTOR m_cameraTarget;
 	DirectX::XMVECTOR m_cameraUp;
+
+	DirectX::XMVECTOR m_cameraDefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);;
+	DirectX::XMVECTOR m_cameraDefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);;
+
+	DirectX::XMVECTOR m_cameraForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);;
+	DirectX::XMVECTOR m_cameraRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);;
+
+	DirectX::XMMATRIX m_cameraRotation;
+
+	float m_cameraMoveLeftRight = 0.0f;
+	float m_cameraMoveBackForward = 0.0f;
+
+	float m_cameraYaw = 0.0f;
+	float m_cameraPitch = 0.0f;
 
 	// Input
 	std::unique_ptr<xfwInput> m_input = nullptr;
